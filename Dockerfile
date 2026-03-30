@@ -72,8 +72,12 @@ RUN code-server --install-extension dbaeumer.vscode-eslint \
     && code-server --install-extension eamodio.gitlens \
     && code-server --install-extension formulahendry.auto-rename-tag
 
+
+# Pre-create coder binary placeholder so Docker bind mount works correctly
+USER root
+RUN touch /usr/bin/coder && chmod +x /usr/bin/coder
+
 WORKDIR /home/coder
 USER coder
 
-# No ENTRYPOINT - Coder template manages startup via command block
 CMD ["sleep", "infinity"]
