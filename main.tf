@@ -25,13 +25,13 @@ variable "docker_registry" {
 variable "coder_url" {
   description = "Public URL of the Coder server"
   type        = string
-  default     = "http://4.212.240.110"
+  default     = "http://172.17.0.1:3000"
 }
 
 variable "coder_binary_host_path" {
   description = "Path to the coder binary on the worker host"
   type        = string
-  default     = "/usr/local/bin/coder"
+  default = "/usr/bin/coder"
 }
 
 # =============================================================================
@@ -276,7 +276,7 @@ resource "docker_container" "workspace" {
 
   volumes {
     host_path      = var.coder_binary_host_path
-    container_path = "/usr/local/bin/coder"
+    container_path = "/usr/bin/coder"
     read_only      = true
   }
 
@@ -317,7 +317,7 @@ fi
 
 echo "[INFO] CODER_AGENT_URL=$CODER_AGENT_URL"
 curl -sS --max-time 5 "$CODER_AGENT_URL/api/v2/buildinfo" && echo "" || echo "[WARN] Cannot reach Coder server"
-exec /usr/local/bin/coder agent
+exec /usr/bin/coder agent
 EOT
   ]
 
