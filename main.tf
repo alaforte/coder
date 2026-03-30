@@ -43,7 +43,7 @@ data "coder_parameter" "resources" {
   display_name = "Resource Size"
   description  = "CPU and memory allocation for the workspace"
   type         = "string"
-  default      = "small"
+  default      = "medium"
   mutable      = true
   icon         = "/icon/memory.svg"
 
