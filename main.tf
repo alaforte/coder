@@ -263,6 +263,10 @@ resource "docker_container" "workspace" {
   cpu_shares = local.cpu * 1024
   memory     = local.memory
 
+  # init=true enables Docker's built-in tini init process as PID 1.
+  # Required for the coder agent reaper to work correctly inside a container.
+  init = true
+
   volumes {
     volume_name    = docker_volume.home.name
     container_path = "/home/coder"
@@ -287,8 +291,8 @@ mkdir -p /home/coder/projects
 
 # Download coder agent binary at first start
 if ! command -v coder &>/dev/null; then
-  echo "[INFO] Downloading coder agent..."
-  curl -fsSL https://coder.com/install.sh | sh > /tmp/coder-install.log 2>&1 \
+  echo "[INFO] Downloading coder agent v2.29.1..."
+  curl -fsSL https://coder.com/install.sh | sh -s -- --version 2.29.1 > /tmp/coder-install.log 2>&1 \
     || echo "[WARN] coder install failed - check /tmp/coder-install.log"
 fi
 
