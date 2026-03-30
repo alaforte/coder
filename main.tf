@@ -23,15 +23,9 @@ variable "docker_registry" {
 }
 
 variable "coder_url" {
-  description = "Public URL of the Coder server"
+  description = "URL of the Coder server reachable from within Docker containers"
   type        = string
   default     = "http://172.17.0.1:3000"
-}
-
-variable "coder_binary_host_path" {
-  description = "Path to the coder binary on the worker host"
-  type        = string
-  default = "/usr/bin/coder"
 }
 
 # =============================================================================
@@ -274,12 +268,6 @@ resource "docker_container" "workspace" {
     container_path = "/home/coder"
   }
 
-  volumes {
-    host_path      = var.coder_binary_host_path
-    container_path = "/usr/bin/coder"
-    read_only      = true
-  }
-
   dynamic "volumes" {
     for_each = data.coder_parameter.enable_docker.value == "true" ? [1] : []
     content {
@@ -296,6 +284,13 @@ resource "docker_container" "workspace" {
   entrypoint = ["/bin/bash", "-c"]
   command = [<<-EOT
 mkdir -p /home/coder/projects
+
+# Download coder agent binary at first start
+if ! command -v coder &>/dev/null; then
+  echo "[INFO] Downloading coder agent..."
+  curl -fsSL https://coder.com/install.sh | sh > /tmp/coder-install.log 2>&1 \
+    || echo "[WARN] coder install failed - check /tmp/coder-install.log"
+fi
 
 %{if data.coder_parameter.git_pat.value != ""}
 git config --global credential.helper 'store --file=/tmp/.git-credentials'
@@ -317,7 +312,7 @@ fi
 
 echo "[INFO] CODER_AGENT_URL=$CODER_AGENT_URL"
 curl -sS --max-time 5 "$CODER_AGENT_URL/api/v2/buildinfo" && echo "" || echo "[WARN] Cannot reach Coder server"
-exec /usr/bin/coder agent
+exec coder agent
 EOT
   ]
 
